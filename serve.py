@@ -72,11 +72,21 @@ def main():
 
     with rst.Context() as ctx:
         cam_ring_buffer: rst.StaticTensorState = ctx.get_state(args.cam_topic)
+        frame = cam_ring_buffer.get()
+        frame_shape = frame['rgb'].shape
+        pose_ring_buffer = ctx.StaticMultiTensorState(
+            topic_name=f"{args.cam_topic}/mano",
+            examples=frame,
+            get_max_k=32,
+            get_time_budget=0.8,  # FIXME make it 200ms
+            put_desired_frequency=args.fps,  # actual fps might be lower - see cap.set below
+        )
+
         frame_idx = 0
         while True:
             # FIXME make sure we roughly match the fps
             time.sleep(1.0 / args.fps)
-
+            frame_idx += 1
 
             frame = cam_ring_buffer.get()
             img_cv2 = frame['rgb'][:, :, ::-1]  # Convert RGB to BGR
@@ -160,6 +170,9 @@ def main():
 
                     final_img = np.concatenate([input_patch, regression_img], axis=1)
                     cv2.imwrite(os.path.join(args.out_folder, f'{img_fn}_{person_id}.png'), 255*final_img[:, :, ::-1])
+
+            #pose_ring_buffer.put({'rgb': 255*final_img[:, :, ::-1],
+            #                      'camera_receive_timestamp': time.monotonic_ns()})
 
 
 

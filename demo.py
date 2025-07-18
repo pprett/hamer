@@ -173,6 +173,11 @@ def main():
 
                 cv2.imwrite(os.path.join(args.out_folder, f'{img_fn}_{person_id}.png'), 255*final_img[:, :, ::-1])
 
+                print(f"{img_fn}_{person_id}.png : joints\n{out['pred_keypoints_3d'][n]}\n\n")
+
+                np.save(os.path.join(args.out_folder, f'{img_fn}_{person_id}_keypoints_3d.npy'), out['pred_keypoints_3d'][n].cpu().numpy())
+                np.save(os.path.join(args.out_folder, f'{img_fn}_{person_id}_keypoints_2d.npy'), out['pred_keypoints_2d'][n].cpu().numpy())
+
                 # Add all verts and cams to list
                 verts = out['pred_vertices'][n].detach().cpu().numpy()
                 is_right = batch['right'][n].cpu().numpy()
